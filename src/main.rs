@@ -6,223 +6,228 @@ use std::fmt;
 // use std::ops::Index;
 // use std::ops::IndexMut;
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
-struct State {
-    s: char,
-}
+use turingrs::Direction;
+use turingrs::State;
+use turingrs::Symbol;
+use turingrs::Machine;
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
-struct Symbol {
-    s: char,
-}
+// #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
+// struct State {
+//     s: char,
+// }
 
-enum Direction {
-    Left,
-    Right,
-}
+// #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
+// struct Symbol {
+//     s: char,
+// }
 
-#[derive(Debug)]
-struct Tape {
-    data: VecDeque<Symbol>,
-    head: usize,
-    blank_symbol: Symbol,
-}
+// enum Direction {
+//     Left,
+//     Right,
+// }
 
-impl Tape {
-    fn new(data: VecDeque<Symbol>, blank_symbol: Symbol) -> Tape {
-        Tape {
-            data: data,
-            head: 0,
-            blank_symbol: blank_symbol,
-        }
-    }
+// #[derive(Debug)]
+// struct Tape {
+//     data: VecDeque<Symbol>,
+//     head: usize,
+//     blank_symbol: Symbol,
+// }
 
-    // fn _extend_to_index(&mut self, index: i32) -> usize {
-    //     if index < self.left {
-    //         let n = (self.left - index).try_into().unwrap();
-    //         let mut blanks = vec![self.blank_symbol; n];
-    //         prepend(&mut blanks, &mut self.data);
-    //         self.left = index;
-    //         0
-    //     } else {
-    //         if self.right() <= index {
-    //             let n = ((index - self.right()) + 1).try_into().unwrap();
-    //             let mut blanks = VecDeque::from(vec![self.blank_symbol; n]);
-    //             self.data.append(&mut blanks);
-    //             index.try_into().unwrap()
-    //         } else {
-    //             index.try_into().unwrap()
-    //         }
-    //     }
-    // }
-
-    // fn right(&self) -> i32 {
-    //     self.left + (self.data.len() as i32)
-    // }
-
-    // fn get(&mut self, index: i32) -> &Symbol {
-    //     let i = self._extend_to_index(index);
-    //     &self.data[i]
-    // }
-
-    // fn set(&mut self, index: i32, value: Symbol) {
-    //     let i = self._extend_to_index(index);
-    //     self.data[i] = value;
-    // }
-
-    fn read(&self) -> Symbol {
-        self.data[self.head]
-    }
-
-    fn write(&mut self, symbol: Symbol) {
-        self.data[self.head] = symbol;
-    }
-
-    fn move_head(&mut self, direction: &Direction) {
-        match direction {
-            Direction::Right => {
-                self.head += 1;
-                if self.head == self.data.len() {
-                    self.data.push_back(self.blank_symbol);
-                }
-            }
-            Direction::Left => {
-                if self.head == 0 {
-                    self.data.push_front(self.blank_symbol);
-                } else {
-                    self.head -= 1;
-                }
-            }
-        }
-    }
-}
-
-fn prepend(left: &mut Vec<Symbol>, right: &mut VecDeque<Symbol>) {
-    loop {
-        if let Some(symbol) = left.pop() {
-            right.push_front(symbol)
-        }
-    }
-}
-
-// impl Index<i32> for Tape {
-//     type Output = Symbol;
-
-//     fn index(&self, index: i32) -> &Self::Output {
-//         if index < self.left {
-//             let n = (self.left - index).try_into().unwrap();
-//             let mut blanks = vec![self.blank_symbol; n];
-//             prepend(&mut blanks, &mut self.data);
-//             self.left = index;
+// impl Tape {
+//     fn new(data: VecDeque<Symbol>, blank_symbol: Symbol) -> Tape {
+//         Tape {
+//             data: data,
+//             head: 0,
+//             blank_symbol: blank_symbol,
 //         }
-//         let i = (index - self.left).try_into().unwrap();
-//         &self.data[i]
+//     }
+
+//     // fn _extend_to_index(&mut self, index: i32) -> usize {
+//     //     if index < self.left {
+//     //         let n = (self.left - index).try_into().unwrap();
+//     //         let mut blanks = vec![self.blank_symbol; n];
+//     //         prepend(&mut blanks, &mut self.data);
+//     //         self.left = index;
+//     //         0
+//     //     } else {
+//     //         if self.right() <= index {
+//     //             let n = ((index - self.right()) + 1).try_into().unwrap();
+//     //             let mut blanks = VecDeque::from(vec![self.blank_symbol; n]);
+//     //             self.data.append(&mut blanks);
+//     //             index.try_into().unwrap()
+//     //         } else {
+//     //             index.try_into().unwrap()
+//     //         }
+//     //     }
+//     // }
+
+//     // fn right(&self) -> i32 {
+//     //     self.left + (self.data.len() as i32)
+//     // }
+
+//     // fn get(&mut self, index: i32) -> &Symbol {
+//     //     let i = self._extend_to_index(index);
+//     //     &self.data[i]
+//     // }
+
+//     // fn set(&mut self, index: i32, value: Symbol) {
+//     //     let i = self._extend_to_index(index);
+//     //     self.data[i] = value;
+//     // }
+
+//     fn read(&self) -> Symbol {
+//         self.data[self.head]
+//     }
+
+//     fn write(&mut self, symbol: Symbol) {
+//         self.data[self.head] = symbol;
+//     }
+
+//     fn move_head(&mut self, direction: &Direction) {
+//         match direction {
+//             Direction::Right => {
+//                 self.head += 1;
+//                 if self.head == self.data.len() {
+//                     self.data.push_back(self.blank_symbol);
+//                 }
+//             }
+//             Direction::Left => {
+//                 if self.head == 0 {
+//                     self.data.push_front(self.blank_symbol);
+//                 } else {
+//                     self.head -= 1;
+//                 }
+//             }
+//         }
 //     }
 // }
 
-// impl IndexMut<i32> for Tape {
-//     fn index_mut(&mut self, index: i32) -> &mut Self::Output {
-//         if index < self.left {
-//             let n = (self.left - index).try_into().unwrap();
-//             let mut blanks = vec![self.blank_symbol; n];
-//             prepend(&mut blanks, &mut self.data);
-//             self.left = index;
+// fn prepend(left: &mut Vec<Symbol>, right: &mut VecDeque<Symbol>) {
+//     loop {
+//         if let Some(symbol) = left.pop() {
+//             right.push_front(symbol)
 //         }
-//         let i = (index - self.left).try_into().unwrap();
-//         &mut self.data[i]
 //     }
 // }
 
-struct Machine {
-    states: HashSet<State>,                                                    // Q
-    tape_alphabet: HashSet<Symbol>,                                            // Gamma
-    blank_symbol: Symbol,                                                      // b
-    input_alphabet: HashSet<Symbol>,                                           // Sigma
-    initial_state: State,                                                      // q_0
-    accepting_states: HashSet<State>,                                          // accepting states
-    transition_function: HashMap<(State, Symbol), (State, Symbol, Direction)>, // delta
-}
+// // impl Index<i32> for Tape {
+// //     type Output = Symbol;
 
-struct Configuration<'a> {
-    state: State,
-    tape: &'a Tape,
-}
+// //     fn index(&self, index: i32) -> &Self::Output {
+// //         if index < self.left {
+// //             let n = (self.left - index).try_into().unwrap();
+// //             let mut blanks = vec![self.blank_symbol; n];
+// //             prepend(&mut blanks, &mut self.data);
+// //             self.left = index;
+// //         }
+// //         let i = (index - self.left).try_into().unwrap();
+// //         &self.data[i]
+// //     }
+// // }
 
-impl fmt::Display for Configuration<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // Get the symbols from the tape.
-        let (prefix, suffix) = self.tape.data.as_slices();
-        let symbols = [prefix, suffix].concat();
+// // impl IndexMut<i32> for Tape {
+// //     fn index_mut(&mut self, index: i32) -> &mut Self::Output {
+// //         if index < self.left {
+// //             let n = (self.left - index).try_into().unwrap();
+// //             let mut blanks = vec![self.blank_symbol; n];
+// //             prepend(&mut blanks, &mut self.data);
+// //             self.left = index;
+// //         }
+// //         let i = (index - self.left).try_into().unwrap();
+// //         &mut self.data[i]
+// //     }
+// // }
 
-        // Split the symbols at the head location.
-        let (left, right) = &symbols.split_at(self.tape.head);
+// struct Machine {
+//     states: HashSet<State>,                                                    // Q
+//     tape_alphabet: HashSet<Symbol>,                                            // Gamma
+//     blank_symbol: Symbol,                                                      // b
+//     input_alphabet: HashSet<Symbol>,                                           // Sigma
+//     initial_state: State,                                                      // q_0
+//     accepting_states: HashSet<State>,                                          // accepting states
+//     transition_function: HashMap<(State, Symbol), (State, Symbol, Direction)>, // delta
+// }
 
-        // Insert the state at the head location.
-        let mut result = String::new();
-        for symbol in left.iter() {
-            result.push(symbol.s);
-        }
-        result.push(self.state.s);
-        for symbol in right.iter() {
-            result.push(symbol.s);
-        }
-        write!(f, "{}", result)
-    }
-}
+// struct Configuration<'a> {
+//     state: State,
+//     tape: &'a Tape,
+// }
 
-struct RuntimeError {
-    message: String,
-    // configuration: Configuration,
-}
+// impl fmt::Display for Configuration<'_> {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         // Get the symbols from the tape.
+//         let (prefix, suffix) = self.tape.data.as_slices();
+//         let symbols = [prefix, suffix].concat();
 
-impl Machine {
-    fn run(&self, mut tape: Tape) -> Result<bool, RuntimeError> {
-        // Define the initial configuration of the machine.
-        let mut current_state = self.initial_state;
+//         // Split the symbols at the head location.
+//         let (left, right) = &symbols.split_at(self.tape.head);
 
-        loop {
-            let configuration = Configuration {
-                state: current_state,
-                tape: &tape,
-            };
-            println!("{}", configuration);
+//         // Insert the state at the head location.
+//         let mut result = String::new();
+//         for symbol in left.iter() {
+//             result.push(symbol.s);
+//         }
+//         result.push(self.state.s);
+//         for symbol in right.iter() {
+//             result.push(symbol.s);
+//         }
+//         write!(f, "{}", result)
+//     }
+// }
 
-            // If we are in the accepting state, immediately terminate
-            // the machine.
-            if self.accepting_states.contains(&current_state) {
-                return Ok(true);
-            }
+// struct RuntimeError {
+//     message: String,
+//     // configuration: Configuration,
+// }
 
-            // Read the current symbol.
-            let current_symbol = tape.read();
+// impl Machine {
+//     fn run(&self, mut tape: Tape) -> Result<bool, RuntimeError> {
+//         // Define the initial configuration of the machine.
+//         let mut current_state = self.initial_state;
 
-            // Apply the transition function based on the current state
-            // and the current symbol.
-            let input = (current_state, current_symbol);
-            let maybe_output = self.transition_function.get(&input);
-            let output = maybe_output.ok_or(RuntimeError {
-                message: "something went wrong".to_string(),
-            })?;
+//         loop {
+//             let configuration = Configuration {
+//                 state: current_state,
+//                 tape: &tape,
+//             };
+//             println!("{}", configuration);
 
-            current_state = output.0;
-            let write_symbol = output.1;
-            let direction = &output.2;
+//             // If we are in the accepting state, immediately terminate
+//             // the machine.
+//             if self.accepting_states.contains(&current_state) {
+//                 return Ok(true);
+//             }
 
-            // Write the symbol.
-            tape.write(write_symbol);
+//             // Read the current symbol.
+//             let current_symbol = tape.read();
 
-            // Move the head.
-            tape.move_head(&direction);
-        }
-    }
-}
+//             // Apply the transition function based on the current state
+//             // and the current symbol.
+//             let input = (current_state, current_symbol);
+//             let maybe_output = self.transition_function.get(&input);
+//             let output = maybe_output.ok_or(RuntimeError {
+//                 message: "something went wrong".to_string(),
+//             })?;
+
+//             current_state = output.0;
+//             let write_symbol = output.1;
+//             let direction = &output.2;
+
+//             // Write the symbol.
+//             tape.write(write_symbol);
+
+//             // Move the head.
+//             tape.move_head(&direction);
+//         }
+//     }
+// }
 
 fn main() {
     // States
-    let a = State { s: 'a' };
-    let b = State { s: 'b' };
-    let c = State { s: 'c' };
-    let halt = State { s: 'h' };
+    let a = State::new('a');
+    let b = State::new('b');
+    let c = State::new('c');
+    let halt = State::new('h');
     let mut states = HashSet::new();
     states.insert(a);
     states.insert(b);
@@ -230,8 +235,8 @@ fn main() {
     states.insert(halt);
 
     // Tape alphabet
-    let zero = Symbol { s: '0' };
-    let one = Symbol { s: '1' };
+    let zero = Symbol::new('0');
+    let one = Symbol::new('1');
     let mut tape_alphabet = HashSet::new();
     tape_alphabet.insert(zero);
     tape_alphabet.insert(one);
@@ -260,7 +265,7 @@ fn main() {
     transition_function.insert((c, one), (halt, one, Direction::Right));
 
     // Machine
-    let machine = Machine {
+    let machine = Machine::new(
         states,
         tape_alphabet,
         blank_symbol,
@@ -268,11 +273,12 @@ fn main() {
         initial_state,
         accepting_states,
         transition_function,
-    };
+    );
 
     // Run on the initially empty tape.
-    let mut data = VecDeque::new();
-    data.push_back(zero);
-    let tape = Tape::new(data, blank_symbol);
-    machine.run(tape);
+    let mut tape = VecDeque::new();
+    tape.push_back(zero);
+    for configuration in machine.iter(tape) {
+        println!("{}", configuration);
+    }
 }
