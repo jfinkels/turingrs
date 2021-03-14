@@ -121,7 +121,7 @@ pub struct ConfigurationIterator<'a> {
 
 
 impl<'a> Iterator for ConfigurationIterator<'a> {
-    type Item = Status;
+    type Item = Configuration;
 
     fn next(&mut self) -> Option<Self::Item> {
 
