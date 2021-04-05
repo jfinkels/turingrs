@@ -1,6 +1,6 @@
-use std::collections::VecDeque;
-use std::collections::HashSet;
 use std::collections::HashMap;
+use std::collections::HashSet;
+use std::collections::VecDeque;
 use std::fmt;
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
@@ -14,7 +14,6 @@ impl State {
     }
 }
 
-
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub struct Symbol {
     s: char,
@@ -26,12 +25,10 @@ impl Symbol {
     }
 }
 
-
 pub enum Direction {
     Left,
     Right,
 }
-
 
 pub type TransitionFunction = HashMap<(State, Symbol), (State, Symbol, Direction)>;
 
@@ -45,9 +42,7 @@ pub struct Machine {
     transition_function: TransitionFunction, // delta
 }
 
-
 impl Machine {
-
     pub fn new(
         states: HashSet<State>,
         tape_alphabet: HashSet<Symbol>,
@@ -81,17 +76,14 @@ impl Machine {
     }
 }
 
-
 pub struct Configuration {
     state: State,
     head: usize,
     tape: VecDeque<Symbol>,
 }
 
-
 impl fmt::Display for Configuration {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-
         // Get the symbols from the tape.
         let (prefix, suffix) = self.tape.as_slices();
         let symbols = [prefix, suffix].concat();
@@ -112,32 +104,35 @@ impl fmt::Display for Configuration {
     }
 }
 
-
 pub struct ConfigurationIterator<'a> {
     transition_function: &'a TransitionFunction,
     configuration: Configuration,
     blank_symbol: Symbol,
 }
 
-
 impl<'a> Iterator for ConfigurationIterator<'a> {
     type Item = Configuration;
 
     fn next(&mut self) -> Option<Self::Item> {
-
-        let Configuration {state, head, tape} = &self.configuration;
+        let Configuration { state, head, tape } = &self.configuration;
 
         // Read the current symbol.
         let symbol = tape[*head];
 
         // Apply the transition function based on the current state
         // and the current symbol.
+        //
+        // If the transition function does not have an entry, then we
+        // assume that means the current state is a halting state, so
+        // we terminate the iterator by returning `None`.
         let input = (*state, symbol);
-        let output = self.transition_function.get(&input).unwrap();
+        let output = match self.transition_function.get(&input) {
+            Some(o) => o,
+            None => {
+                return None;
+            }
+        };
         let (next_state, write_symbol, direction) = output;
-        // let next_state = output.0;
-        // let write_symbol = output.1;
-        // let direction = output.2;
 
         // Write the symbol.
         let mut next_tape = tape.clone();
@@ -151,7 +146,7 @@ impl<'a> Iterator for ConfigurationIterator<'a> {
                     next_tape.push_back(self.blank_symbol);
                 }
                 head + 1
-            },
+            }
             Direction::Left => {
                 if *head == 0 {
                     next_tape.push_front(self.blank_symbol);
@@ -159,7 +154,7 @@ impl<'a> Iterator for ConfigurationIterator<'a> {
                 } else {
                     head - 1
                 }
-            },
+            }
         };
 
         let configuration_to_store = Configuration {
@@ -177,9 +172,7 @@ impl<'a> Iterator for ConfigurationIterator<'a> {
 
         Some(configuration_to_return)
     }
-    
 }
-
 
 // fn main() {
 // }
