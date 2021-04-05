@@ -3,7 +3,11 @@ use std::collections::HashSet;
 use std::collections::VecDeque;
 use std::fmt;
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
+use serde_derive::Serialize;
+use serde_derive::Deserialize;
+
+
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct State {
     s: char,
 }
@@ -14,7 +18,7 @@ impl State {
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Symbol {
     s: char,
 }
@@ -25,6 +29,7 @@ impl Symbol {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum Direction {
     Left,
     Right,
@@ -32,6 +37,7 @@ pub enum Direction {
 
 pub type TransitionFunction = HashMap<(State, Symbol), (State, Symbol, Direction)>;
 
+#[derive(Serialize, Deserialize)]
 pub struct Machine {
     states: HashSet<State>,                  // Q
     tape_alphabet: HashSet<Symbol>,          // Gamma
@@ -174,5 +180,121 @@ impl<'a> Iterator for ConfigurationIterator<'a> {
     }
 }
 
-// fn main() {
-// }
+mod tests {
+    use std::collections::HashMap;
+    use std::collections::HashSet;
+    use std::collections::VecDeque;
+    use serde;
+
+    use crate::Configuration;
+    use crate::Direction;
+    use crate::Machine;
+    use crate::State;
+    use crate::Symbol;
+
+    #[test]
+    fn busy_beaver() {
+
+        // Test for the three-state busy beaver Turing machine:
+        // https://en.wikipedia.org/wiki/Turing_machine
+
+        // States
+        let a = State::new('a');
+        let b = State::new('b');
+        let c = State::new('c');
+        let halt = State::new('h');
+        let mut states = HashSet::new();
+        states.insert(a);
+        states.insert(b);
+        states.insert(c);
+        states.insert(halt);
+
+        // Tape alphabet
+        let zero = Symbol::new('0');
+        let one = Symbol::new('1');
+        let mut tape_alphabet = HashSet::new();
+        tape_alphabet.insert(zero);
+        tape_alphabet.insert(one);
+
+        // Blank symbol
+        let blank_symbol = zero;
+
+        // Input symbols
+        let mut input_alphabet = HashSet::new();
+        input_alphabet.insert(one);
+
+        // Initial state
+        let initial_state = a;
+
+        // Accepting states
+        let mut accepting_states = HashSet::new();
+        accepting_states.insert(halt);
+
+        // Transition function
+        let mut transition_function = HashMap::new();
+        transition_function.insert((a, zero), (b, one, Direction::Right));
+        transition_function.insert((a, one), (c, one, Direction::Left));
+        transition_function.insert((b, zero), (a, one, Direction::Left));
+        transition_function.insert((b, one), (b, one, Direction::Right));
+        transition_function.insert((c, zero), (b, one, Direction::Left));
+        transition_function.insert((c, one), (halt, one, Direction::Right));
+
+        // Machine
+        let machine = Machine::new(
+            states,
+            tape_alphabet,
+            blank_symbol,
+            input_alphabet,
+            initial_state,
+            accepting_states,
+            transition_function,
+        );
+
+        // Run on the initially empty tape and collect the configurations.
+        let mut tape = VecDeque::new();
+        tape.push_back(zero);
+        let configurations: Vec<Configuration> = machine.iter(tape).collect();
+
+        // Turn the configurations into a string with one
+        // configuration per line.
+        let tableau: Vec<String> = configurations.iter().map(|x| format!("{}", x)).collect();
+        let actual = tableau.join("\n");
+        let expected = "
+1b0
+a11
+c011
+b0111
+a01111
+1b1111
+11b111
+111b11
+1111b1
+11111b0
+1111a11
+111c111
+1111h11
+".trim();
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn roundtrip() {
+        let expected = "
+    abch
+    01
+    0
+    1
+    a
+    a0b1r
+    a1c1l
+    b0a1l
+    b1b1r
+    c0b1l
+    c1h1r
+".trim_start();
+
+        let actual: String = serde_json::from_str(&serde_json::to_string(expected).unwrap()).unwrap();
+        assert_eq!(actual, expected);
+    }
+
+}
